@@ -1,3 +1,6 @@
+> [!NOTE] Info
+> Branch for proting the inference model to ama-riscv CPU
+
 # BitNetMCU: High Accuracy Low-Bit Quantized Neural Networks on a low-end Microcontroller
 
 **BitNetMCU** is a project focused on the training and inference of low-bit quantized neural networks, specifically designed to run efficiently on low-end microcontrollers like the CH32V003. Quantization aware training (QAT) and fine-tuning of model structure and inference code allowed *surpassing 99% Test accuracy on a 16x16 MNIST dataset without using multiplication instructions and in only 2kb of RAM and 16kb of Flash*.
