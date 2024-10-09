@@ -1,15 +1,14 @@
-/* Using BitNeuMCU for inference of 16x16 MNIST images on a CH32V003 */
+/* Using BitNetMCU for inference of 16x16 MNIST images */
 
-#include "ch32v003fun.h"
-
-// Declare processfclayer an SRAM based function for speedup
-void processfclayer(int8_t *,  const uint32_t *, int32_t, uint32_t, uint32_t, int32_t *) __attribute__((section(".srodata"))) __attribute__((used));
-
-#include "../BitNetMCU_inference.c"
+#include "common.h"
+#include "BitNetMCU_inference.h"
 // #include "BitNetMCU_model_1k.h"
 #include "BitNetMCU_model_12k.h"
 // #include "BitNetMCU_model_12k_FP130.h"
 #include <stdio.h>
+
+// Declare processfclayer an SRAM based function for speedup
+void processfclayer(int8_t *,  const uint32_t *, int32_t, uint32_t, uint32_t, int32_t *) __attribute__((section(".srodata"))) __attribute__((used));
 
 const int8_t input_data_0[256] = {-22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, 11.0, 64.0, 30.0, 6.0, -14.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, 28.0, 124.0, 127.0, 115.0, 66.0, -3.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -12.0, 18.0, 58.0, 97.0, 124.0, 70.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -16.0, 47.0, 100.0, -11.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -21.0, 44.0, 104.0, -11.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -16.0, 68.0, 106.0, -12.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -13.0, 77.0, 99.0, -18.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -13.0, 77.0, 96.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -13.0, 77.0, 96.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -13.0, 77.0, 96.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -17.0, 62.0, 97.0, -20.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, 18.0, 71.0, -14.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -22.0, -20.0, -16.0, -21.0, -22.0, -22.0, -22.0, -22.0, -22.0};
 const uint8_t label_0 = 7;
@@ -26,7 +25,7 @@ void BitMnistInference(const int8_t *input, const uint8_t label, const uint8_t s
 	int32_t prediction;
 	uint32_t startticks, endticks;
 
-	startticks = SysTick->CNT;
+	startticks = clock_ticks();
     processfclayer((int8_t*)input, L1_weights, L1_bitperweight, L1_incoming_weights, L1_outgoing_weights, layer_out);
     ReLUNorm(layer_out, layer_in, L1_outgoing_weights);
 
@@ -41,24 +40,18 @@ void BitMnistInference(const int8_t *input, const uint8_t label, const uint8_t s
     prediction=ReLUNorm(layer_out, layer_in, L4_outgoing_weights);
 #endif
 
-	endticks = SysTick->CNT;
+	endticks = clock_ticks();
 
-	printf( "Inference of Sample %d\tPrediction: %ld\tLabel: %d\tTiming: %lu clock cycles\n", sample, prediction, label, endticks-startticks);	
+	printf( "Inference of Sample %d\tPrediction: %ld\tLabel: %d\tTiming: %lu clock cycles\n", sample, prediction, label, endticks-startticks);
 }
 
 int main()
 {
-	SystemInit();
-//	SysTick->CTLR = 5;  // Use HCLK as time base -> configured in funconfig.h
-
-	while(1)
-	{
-		printf("Starting MNIST inference...\n");
-		BitMnistInference(input_data_0, label_0,1);	
-		BitMnistInference(input_data_1, label_1,2);	
-		BitMnistInference(input_data_2, label_2,3);	
-		BitMnistInference(input_data_3, label_3,4);	
-		Delay_Ms(1000);
-	}
+	printf("Starting MNIST inference...\n");
+	//LOG_START;
+	BitMnistInference(input_data_0, label_0,1);
+	//LOG_STOP;
+	BitMnistInference(input_data_1, label_1,2);
+	BitMnistInference(input_data_2, label_2,3);
+	BitMnistInference(input_data_3, label_3,4);
 }
-
